@@ -17,8 +17,8 @@ contract LoanContract {
     bool lenderPaid;
     bool renterRefunded;
 
-	enum State { Created, Collaterized, Transferring, Loaned, ReturnScheduled, Returned, Refund, Inactive, Late }
-	enum Standing { Friendly, Unconfirmed, Dispute, Unresponsive }
+	enum State { Created, Collaterized, Transferring, Loaned, ReturnScheduled, Returned, Refunded, Inactive, Late } //late is unused, refunded is kinda used but maybe it shouldn't be
+	enum Standing { Friendly, Unconfirmed, Dispute, Unresponsive } //still not sure what I want this for, but it does kinda leave metadata for postmortum
     State public state;
     Standing public standing;
 
@@ -39,13 +39,17 @@ contract LoanContract {
     }
 
     modifier  notLender() { 
-    	require(msg.sender != lender); 
+    	require(
+            msg.sender != lender,
+            "Don't rent to yourself."
+        ); 
     	_; 
     }
     
     modifier onlyMemeber() { 
         require (
-            msg.sender == renter || msg.sender == lender
+            msg.sender == renter || msg.sender == lender,
+            "You are not a participant in the contract."
         ); 
         _; 
     }
@@ -53,7 +57,7 @@ contract LoanContract {
     modifier inState(State _state) {
         require(
             state == _state,
-            "Invalid state."
+            "Invalid state. Please check that you are allowed to run this method at this time."
         );
         _;
     }
@@ -61,7 +65,7 @@ contract LoanContract {
     modifier timedOut() { 
     	require(
     		now >= deadline,
-    		"Renter still has time"
+    		"You must wait until after the deadline."
     	); 
     	_; 
     }
@@ -69,7 +73,7 @@ contract LoanContract {
     modifier notTimedOut() {
     	require(
     		now < deadline,
-    		"Lending has timed out"
+    		"The deadline has passed."
     	); 
     	_;
     }
@@ -93,6 +97,7 @@ contract LoanContract {
     event Created();
     event ContractFunded();
     event Aborted();
+    event LastChanceAborted();
     event InvitationToTrade();
     event ItemLoaned();
     event ReturnScheduled();
@@ -151,7 +156,7 @@ contract LoanContract {
     {
         emit Aborted();
         state = State.Inactive;
-        lender.transfer(address(this).balance);
+        lender.transfer(address(this).balance);//maybe add the safeguard of transferring to lender the amount they're owned and send to renter the rest
     }
 
     /// This is how the renter enters the contract
@@ -163,16 +168,16 @@ contract LoanContract {
 	{
 		require(
 			(now + rentPeriod < deadline),
-			"Not enough remaining time to rent"
+			"Not enough remaining time to rent."
 		);
 		require(
 			msg.value >= renterCollateral + paymentAmount,
-			"Not enough funds for payment and collateral"
+			"Not enough funds for payment and collateral."
 		);
 
 		state = State.Collaterized;
 
-		renter = msg.sender;
+		renter = msg.sender; //think about putting something here to account for if there somehow is already a renter
 		paymentStored = msg.value - renterCollateral;
 		deadline = now + rentPeriod;
 		graceDeadline = now + graceTime;
@@ -192,7 +197,7 @@ contract LoanContract {
     	state = State.Inactive;
     	renter.transfer(renterCollateral + paymentStored);
     	lender.transfer(address(this).balance);
-    	emit Aborted();
+    	emit LastChanceAborted();
     }
 
     /// Confirm that you (the lender) will send the item.
@@ -272,7 +277,9 @@ contract LoanContract {
     		!lenderPaid,
     		"Nice try, buck-o"
     	);
-
+        if(renterRefunded){
+            state = State.Refunded;
+        }
         lenderPaid = true;
     	lender.transfer(lenderCollateral + paymentStored);
         emit LenderPaid();
@@ -289,7 +296,9 @@ contract LoanContract {
     		!renterRefunded,
     		"Nice try, buck-o"
     	);
-
+        if(lenderPaid){
+            state = State.Refunded;
+        }
         renterRefunded = true;
     	renter.transfer(renterCollateral);
         emit RenterRefunded();
@@ -319,7 +328,7 @@ contract LoanContract {
     /// here, the item is bought, in the eyes of the renter, for the price of renting plus price of collateral
     /// in the eyes of the lender, it is bought for the price of the renting cost
     /// This is a bad deal for both with minimal losses
-    function cannotReturn()
+    function cannotReturn()//needs a better name
     	public
     	onlyRenter
     	inState(State.Loaned)
@@ -336,7 +345,7 @@ contract LoanContract {
     /// If the Lender isn't giving the Renter the chance to return
     /// The Renter is given the option of a scorched earth abort to avoid neverReturned()
     /// To dissuade malicious use of this, this costs everything from all parties
-    function blameReturn()
+    function blameReturn()//needs a better name
     	public
     	onlyRenter
     	inState(State.ReturnScheduled)
@@ -365,7 +374,7 @@ contract LoanContract {
     /// If, after collaterized, the giving process does not go well for the Renter
     /// Then they are given the option to scorched earth abort
     /// To dissuade malicious use of this, this costs everything from all parties
-    function blameGive()
+    function blameGive()//name is fine but look to other name for new name paradigm
     	public
     	onlyRenter
     	inState(State.Transferring)
