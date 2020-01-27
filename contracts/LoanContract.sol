@@ -345,7 +345,7 @@ contract LoanContract {
     /// If the Lender isn't giving the Renter the chance to return
     /// The Renter is given the option of a scorched earth abort to avoid neverReturned()
     /// To dissuade malicious use of this, this costs everything from all parties
-    function blameReturn()//needs a better name
+    function blameReturn()//I am highly concerned about this method. I'm not sure it really should need to exist. This makes me reconsider the setup of the transferring system and if it should be that way.
     	public
     	onlyRenter
     	inState(State.ReturnScheduled)
