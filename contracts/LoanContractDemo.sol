@@ -318,7 +318,10 @@ contract LoanContract {
         emit LastChanceAborted();
     }
 
-    ///Need to comment
+    /// If the Renter does not report a receipt of the item, the Lender has a chance to accuse the Renter of accepting the item and pretending they didn't
+    /// To pervent misuse, this breaking of the contract costs everything from both parties.
+    /// From a utility standpoint, this worsens the outcome for the lender, but not significantly
+    /// and is the only way to make the outcome of the renter negative (given sensible paymentAmount and collateral) 
     function blameRenterRecieve()
         public
         onlyLender
@@ -333,6 +336,7 @@ contract LoanContract {
     /// If during the transfer period, the Lender cannot give, then they can end the transaction before the grace period ends
     /// Can be used maliciously but only to take same money from both.
     /// This is the lender's safeguard to renter cheating by refusing the item, and should not be used if the item was actually given.
+    /// This is here currently as a seperate option for the Lender to give them an alternative to blameRenterRecieve in the case of external desire for maliciousness
     function blameCannotGive()
         public
         onlyLender
@@ -356,13 +360,13 @@ contract LoanContract {
         afterDisputePeriod
     {
         state = State.Inactive;
-        lender.transfer(lenderCollateral);//should probably this.balance to be safe
         renter.transfer(renterCollateral + paymentStored);
+        lender.transfer(address(this).balance); //equivalent to lender.transfer(lenderCollateral) but a little more safe
         emit LateAborted();
     }
 
     /// If the Lender is truly unresponsive, the Renter has a failsafe with a full refund for them
-    /// and a partial slashing of the Lender
+    /// and a partial slashing of the Lender to incentivise their paying attention to their loan contract
     function abortTimeoutGiving()
         public
         onlyRenter
