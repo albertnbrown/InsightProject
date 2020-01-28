@@ -1,27 +1,27 @@
 pragma solidity >=0.4.22 <0.7.0;
 
 contract LoanContract {
-	address payable public lender;
+    address payable public lender;
     address payable public renter;
 
-    uint paymentAmount;
-    uint paymentStored;
-    uint renterCollateral;
-    uint lenderCollateral;
+    uint public paymentAmount;
+    uint public paymentStored;
+    uint public renterCollateral;
+    uint public lenderCollateral;
 
-    uint fakenow;
-    uint rentPeriod;
-    uint graceTime;
-    uint deadline;
-    uint graceDeadline;
+    uint public fakenow;
+    uint public rentPeriod;
+    uint public graceTime;
+    uint public deadline;
+    uint public graceDeadline;
 
     bool lenderPaid;
     bool renterRefunded;
 
-	enum State { Created, Collaterized, Transferring, Loaned, ReturnScheduled, Returned, Refund, Inactive, Late }
-	enum Standing { Friendly, Unconfirmed, Dispute, Unresponsive }
+    enum State { Created, Collaterized, Transferring, Loaned, ReturnScheduled, Returned, Refunded, Inactive, Late } //late is unused, refunded is kinda used but maybe it shouldn't be
+    //enum //standing { Friendly, Unconfirmed, Dispute, Unresponsive } //still not sure what I want this for, but it does kinda leave metadata for postmortum
     State public state;
-    Standing public standing;
+    ////standing public //standing;
 
     modifier onlyRenter() {
         require(
@@ -39,62 +39,85 @@ contract LoanContract {
         _;
     }
 
+    modifier  notLender() { 
+        require(
+            msg.sender != lender,
+            "Don't rent to yourself."
+        ); 
+        _; 
+    }
+    
     modifier onlyMemeber() { 
         require (
-            msg.sender == renter || msg.sender == lender
+            msg.sender == renter || msg.sender == lender,
+            "You are not a participant in the contract."
         ); 
         _; 
     }
 
-    modifier  notLender() { 
-    	require(msg.sender != lender); 
-    	_; 
-    }
-    
-
     modifier inState(State _state) {
         require(
             state == _state,
-            "Invalid state."
+            "Invalid state. Please check that you are allowed to run this method at this time."
         );
         _;
     }
 
     modifier timedOut() { 
-    	require(
-    		fakenow >= deadline,
-    		"Renter still has time"
-    	); 
-    	_; 
+        require(
+            fakenow >= deadline,
+            "You must wait until after the deadline."
+        ); 
+        _; 
     }
 
     modifier notTimedOut() {
-    	require(
-    		fakenow < deadline,
-    		"Lending has timed out"
-    	); 
-    	_;
+        require(
+            fakenow < deadline,
+            "The deadline has passed."
+        ); 
+        _;
     }
 
     modifier inGracePeriod() { 
-    	require (
-    		fakenow < graceDeadline,
-    		"You missed the grace period."
-    	);
-    	_; 
+        require (
+            fakenow < graceDeadline,
+            "You missed the grace period."
+        );
+        _; 
+    }
+
+    modifier inDisputePeriod() { 
+        require (
+            fakenow - graceTime < graceDeadline,
+            "You missed the Dispute period."
+        );
+        require (
+            fakenow > graceDeadline,
+            "Wait until the grace period ends."
+        );
+        _; 
+    }
+
+    modifier afterDisputePeriod() { 
+        require (
+            fakenow - graceTime > graceDeadline,
+            "Wait for the dispute period to end."
+        );
+        _; 
     }
 
     modifier afterGracePeriod() { 
-    	require (
-    		fakenow >= graceDeadline,
-    		"Wait until the grace period ends."
-    	); 
-    	_; 
+        require (
+            fakenow >= graceDeadline,
+            "Wait until the grace period ends."
+        ); 
+        _; 
     }
 
-    event Created();
-    event ContractFunded();
-    event Aborted();
+    event Created(); //consider giving the lender address
+    event ContractFunded(); //consider giving the renter address
+
     event InvitationToTrade();
     event ItemLoaned();
     event ReturnScheduled();
@@ -102,8 +125,13 @@ contract LoanContract {
     event RenterRefunded();
     event LenderPaid();
     event RenterInactivity();
+
+    event Aborted();
+    event LastChanceAborted();
+    event LateAborted();
+
     event LenderInactivity();
-    event RenterDisputed();
+    event PurchaseForced();
     event LenderDisputed();
 
     /// Here the renter sets the terms of the rental agreement.
@@ -116,10 +144,10 @@ contract LoanContract {
     /// as well as time to take the actions required to transfer the item back and forth
     constructor() public payable {
         lender = msg.sender;
-        lenderCollateral = 10;
+        lenderCollateral = 10 ether;
         
-        renterCollateral = 10;
-        paymentAmount = 1;
+        renterCollateral = 20 ether;
+        paymentAmount = 1 ether;
         
         fakenow = 0;
         rentPeriod = 20;
@@ -151,60 +179,7 @@ contract LoanContract {
         onlyLender
         inState(State.Created)
     {
-        //require (msg.value == lenderCollateral);
-    }
-
-    /// Abort the purchase and reclaim the ether.
-    /// Can only be called by the lender before
-    /// the contract is put in motion.
-    function abort()
-        public
-        onlyLender
-        inState(State.Created)
-    {
-        emit Aborted();
-        state = State.Inactive;
-        lender.transfer(address(this).balance);
-    }
-
-    /// This is how the renter enters the contract
-    function fundAsRenter()
-    	public
-	    payable
-	    inState(State.Created)
-	{
-		require(
-			(fakenow + rentPeriod < deadline),
-			"Not enough remaining time to rent"
-		);
-		require(
-			msg.value >= renterCollateral + paymentAmount,
-			"Not enough funds for payment and collateral"
-		);
-
-        renter = msg.sender;
-		state = State.Collaterized;
-		paymentStored = msg.value - renterCollateral;
-		deadline = fakenow + rentPeriod;
-		graceDeadline = fakenow + graceTime;
-        timestep();
-		emit ContractFunded();
-	}
-
-    /// Fuzzy Abort
-    /// Works within the grace period of the Renter funding
-    /// Either person can back out during this period
-    /// The period should be used for communication and scheduling
-    function fuzzyAbort()
-    	public
-    	inState(State.Collaterized)
-        onlyMemeber
-    	inGracePeriod
-    {
-    	state = State.Inactive;
-    	renter.transfer(renterCollateral + paymentStored);
-    	lender.transfer(address(this).balance);
-    	emit Aborted();
+        require (msg.value == lenderCollateral);
     }
 
     /// Confirm that you (the lender) will send the item.
@@ -217,21 +192,21 @@ contract LoanContract {
     {
         state = State.Transferring;
         graceDeadline = fakenow + graceTime;
-        standing = Standing.Unconfirmed;
+        //standing = //standing.Unconfirmed;
         emit InvitationToTrade();
     }
 
     /// Confirm receipt of item within grace period and end grace period
     function Recieved()
-    	public
-    	onlyRenter
-    	inState(State.Transferring)
-    	inGracePeriod
+        public
+        onlyRenter
+        inState(State.Transferring)
+        inGracePeriod
     {
-    	state = State.Loaned;
-    	graceDeadline = fakenow;
-    	standing = Standing.Friendly;
-    	emit ItemLoaned();
+        state = State.Loaned;
+        graceDeadline = fakenow;
+        //standing = //standing.Friendly;
+        emit ItemLoaned();
     }
 
 
@@ -243,50 +218,52 @@ contract LoanContract {
     /// The Lender schedules a return with one grace period of the deadline
     /// This begins the transfer period which is graceTime in length
     function scheduleReturn()
-    	public
-    	onlyLender
-    	inState(State.Loaned)
-    	notTimedOut
+        public
+        onlyLender
+        inState(State.Loaned)
+        notTimedOut
     {
-    	require(
-    		fakenow + 2*graceTime > deadline,
-    		"Return schedueld too early, wait until within two grace periods before the deadline."
-    	);
-    	
-    	state = State.ReturnScheduled;
-    	graceDeadline = fakenow + graceTime;
-    	deadline = fakenow + 2*graceTime;
-    	standing = Standing.Unconfirmed;
-    	emit ReturnScheduled();
+        require(
+            fakenow + 2*graceTime > deadline,
+            "Return schedueld too early, wait until within two grace periods before the deadline."
+        );
+        
+        state = State.ReturnScheduled;
+        graceDeadline = fakenow + graceTime;
+        deadline = fakenow + 2*graceTime;
+        //standing = //standing.Unconfirmed;
+        emit ReturnScheduled();
     }
 
     /// Confirm that you (the renter) returned the item.
     function confirmReturned()
-    	public
-    	onlyRenter
-    	inState(State.ReturnScheduled)
-    	inGracePeriod
+        public
+        onlyRenter
+        inState(State.ReturnScheduled)
+        inGracePeriod
     {
-    	state = State.Returned;
-    	graceDeadline = fakenow + graceTime;
-    	standing = Standing.Friendly;
-    	emit ItemReturned();
+        state = State.Returned;
+        graceDeadline = fakenow + graceTime;
+        //standing = //standing.Friendly;
+        emit ItemReturned();
     }
 
     /// This pays and refunds the lender
-	function payLender()
+    function payLender()
         public
         onlyLender
         inState(State.Returned)
         afterGracePeriod
     {
-    	require (
-    		!lenderPaid,
-    		"Nice try, buck-o"
-    	);
-
+        require (
+            !lenderPaid,
+            "Nice try, buck-o"
+        );
+        if(renterRefunded){
+            state = State.Refunded;
+        }
         lenderPaid = true;
-    	lender.transfer(lenderCollateral + paymentStored);
+        lender.transfer(lenderCollateral + paymentStored);
         emit LenderPaid();
     }
 
@@ -297,13 +274,15 @@ contract LoanContract {
         inState(State.Returned)
         afterGracePeriod
     {
-    	require (
-    		!renterRefunded,
-    		"Nice try, buck-o"
-    	);
-
+        require (
+            !renterRefunded,
+            "Nice try, buck-o"
+        );
+        if(lenderPaid){
+            state = State.Refunded;
+        }
         renterRefunded = true;
-    	renter.transfer(renterCollateral);
+        renter.transfer(renterCollateral);
         emit RenterRefunded();
     }
 
@@ -311,129 +290,138 @@ contract LoanContract {
     /// This section starts the dispute framework ///////
     /////////////////////////////////////////////////////
 
-    /// If an inattentive or dumb malicious renter stops responding
-    /// The lender is then paid the maximum amount for the item
-    function neverReturned()
-    	public
-    	onlyLender
-    	inState(State.ReturnScheduled)
-    	timedOut
-    	afterGracePeriod
+    /// Abort the rental if no one comes in as renter to fund the contract.
+    /// Can only be called by the lender before the contract is put in motion.
+    function abortNoInterest()
+        public
+        onlyLender
+        inState(State.Created)
     {
-    	state = State.Inactive;
-    	standing = Standing.Unresponsive;
-    	lender.transfer(address(this).balance);
-    	emit RenterInactivity();
+        state = State.Inactive;
+        lender.transfer(address(this).balance);//maybe add the safeguard of transferring to lender the amount they're owned and send to renter the rest
+        emit Aborted();
+    }
+
+    /// Abort during scheduling
+    /// Works within the grace period of the Renter funding
+    /// Either person can back out during this period
+    /// The period should be used for communication and scheduling
+    function abortLastChance()
+        public
+        onlyMemeber
+        inState(State.Collaterized)
+        inGracePeriod
+    {
+        state = State.Inactive;
+        renter.transfer(renterCollateral + paymentStored);
+        lender.transfer(address(this).balance);
+        emit LastChanceAborted();
+    }
+
+    ///Need to comment
+    function blameRenterRecieve()
+        public
+        onlyLender
+        inState(State.Transferring)
+        inDisputePeriod
+    {
+        state = State.Inactive;
+        //standing = //standing.Dispute;
+        emit LenderDisputed();
+    }
+
+    /// If during the transfer period, the Lender cannot give, then they can end the transaction before the grace period ends
+    /// Can be used maliciously but only to take same money from both.
+    /// This is the lender's safeguard to renter cheating by refusing the item, and should not be used if the item was actually given.
+    function blameCannotGive()
+        public
+        onlyLender
+        inState(State.Transferring)
+        inDisputePeriod
+    {
+        state = State.Inactive;
+        //standing = //standing.Unresponsive;
+        lender.transfer(lenderCollateral - 2*paymentAmount);
+        renter.transfer(renterCollateral - paymentAmount);
+        emit RenterInactivity();
+    }
+
+    /// If the Lender is truly unresponsive, the Renter has a failsafe with a full refund for them.
+    /// This acts as a suggested ending for the Lender if they have a not-so-bad experience with the Renter but cannot trade.
+    /// Either person is able to call this to allow for things to end.
+    function abortCouldntGive()
+        public
+        onlyMemeber
+        inState(State.Transferring)
+        afterDisputePeriod
+    {
+        state = State.Inactive;
+        lender.transfer(lenderCollateral);//should probably this.balance to be safe
+        renter.transfer(renterCollateral + paymentStored);
+        emit LateAborted();
+    }
+
+    /// If the Lender is truly unresponsive, the Renter has a failsafe with a full refund for them
+    /// and a partial slashing of the Lender
+    function abortTimeoutGiving()
+        public
+        onlyRenter
+        inState(State.Collaterized)
+        afterDisputePeriod
+    {
+        state = State.Inactive;
+        //standing = //standing.Unresponsive;
+        lender.transfer(lenderCollateral - paymentAmount);
+        renter.transfer(renterCollateral + paymentStored);
+        emit LenderInactivity();
     }
 
     /// If the lender refuses to initiate takeback of the item
     /// they can complain to invoke bought rented item dispute
-    /// here, the item is bought, in the eyes of the renter, for the price of renting plus price of collateral
-    /// in the eyes of the lender, it is bought for the price of the renting cost
-    /// This is a bad deal for both with minimal losses
-    function cannotReturn()
-    	public
-    	onlyRenter
-    	inState(State.Loaned)
-    	timedOut
-    	afterGracePeriod
+    /// This is designed to be a bad deal for both with minimal losses
+    /// See the documentation for suggested bounds on collateral and item value for further explanation
+    function abortTimeoutForcePurchace()
+        public
+        onlyMemeber
+        inState(State.ReturnScheduled)
+        timedOut
+        afterGracePeriod
     {
-    	state = State.Inactive;
-    	standing = Standing.Unresponsive;
-    	renter.transfer(paymentAmount);
-    	lender.transfer(paymentAmount);
-    	emit RenterDisputed();
-    }
-
-    /// If the Lender isn't giving the Renter the chance to return
-    /// The Renter is given the option of a scorched earth abort to avoid neverReturned()
-    /// To dissuade malicious use of this, this costs everything from all parties
-    function blameReturn()
-    	public
-    	onlyRenter
-    	inState(State.ReturnScheduled)
-    	inGracePeriod
-    {
-    	state = State.Inactive;
-    	standing = Standing.Dispute;
-    	emit RenterDisputed();
+        state = State.Inactive;
+        //standing = //standing.Unresponsive;
+        renter.transfer(renterCollateral - lenderCollateral);
+        lender.transfer(2* lenderCollateral - paymentAmount);
+        emit PurchaseForced();
     }
 
     /// If the Renter falsely claims they returned
     /// The Lender is given the option of a scorched earth abort
     /// To dissuade malicious use of this, this costs everything from all parties
-    /// This needs work, probably
-    function claimFalseReturn()
-    	public
-    	onlyLender
-    	inState(State.Returned)
-    	inGracePeriod
+    function blameFalseReturn()
+        public
+        onlyLender
+        inState(State.Returned)
+        inGracePeriod
     {
-    	state = State.Inactive;
-    	standing = Standing.Dispute;
-    	emit LenderDisputed();
+        state = State.Inactive;
+        //standing = //standing.Dispute;
+        emit LenderDisputed();
     }
 
-    /// If, after collaterized, the giving process does not go well for the Renter
-    /// Then they are given the option to scorched earth abort
-    /// To dissuade malicious use of this, this costs everything from all parties
-    function blameGive()
-    	public
-    	onlyRenter
-    	inState(State.Transferring)
-    	inGracePeriod
+    /// If an inattentive or dumb malicious lender stops responding
+    /// The renter gets everything back and may keep the item.
+    function abortTimeoutReturnScheduling()
+        public
+        onlyRenter
+        inState(State.Loaned)
+        timedOut
+        afterGracePeriod
     {
-    	state = State.Inactive;
-    	standing = Standing.Dispute;
-    	emit RenterDisputed();
+        state = State.Inactive;
+        //standing = //standing.Unresponsive;
+        renter.transfer(renterCollateral + paymentAmount);
+        lender.transfer(lenderCollateral);
+        emit LenderInactivity();
     }
 
-    /// If the grace period for initial transferring expires and the renter does not signal success or blame
-    /// Then it is likely that the renter didn't respond as they were given chance to both positively and negatively
-    /// Therefore a partial abort is done with payment slashed
-    function cannotGive()
-    	public
-    	onlyLender
-    	inState(State.Transferring)
-    	afterGracePeriod
-    	notTimedOut
-    {
-    	state = State.Inactive;
-    	standing = Standing.Unresponsive;
-    	lender.transfer(lenderCollateral);
-    	renter.transfer(renterCollateral);
-    	emit RenterInactivity();
-    }
-
-    /// If the Lender is truly unresponsive, the Renter has a failsafe with a full refund for them
-    /// and a partial slashing of the Lender
-    function timeOutAfterGive()
-    	public
-    	onlyRenter
-    	inState(State.Transferring)
-    	afterGracePeriod
-    	timedOut
-    {
-    	state = State.Inactive;
-    	standing = Standing.Unresponsive;
-    	lender.transfer(lenderCollateral - paymentAmount);
-    	renter.transfer(renterCollateral + paymentStored);
-    	emit LenderInactivity();
-    }
-
-    /// If the Lender is truly unresponsive, the Renter has a failsafe with a full refund for them
-    /// and a partial slashing of the Lender
-    function timeOutOnGive()
-    	public
-    	onlyRenter
-    	inState(State.Collaterized)
-    	afterGracePeriod
-    	timedOut
-    {
-    	state = State.Inactive;
-    	standing = Standing.Unresponsive;
-    	lender.transfer(lenderCollateral - paymentAmount);
-    	renter.transfer(renterCollateral + paymentStored);
-    	emit LenderInactivity();
-    }
 }

@@ -4,15 +4,15 @@ contract LoanContract {
 	address payable public lender;
     address payable public renter;
 
-    uint paymentAmount;
-    uint paymentStored;
-    uint renterCollateral;
-    uint lenderCollateral;
+    uint public paymentAmount;
+    uint public paymentStored;
+    uint public renterCollateral;
+    uint public lenderCollateral;
 
-    uint rentPeriod;
-    uint graceTime;
-    uint deadline;
-    uint graceDeadline;
+    uint public rentPeriod;
+    uint public graceTime;
+    uint public deadline;
+    uint public graceDeadline;
 
     bool lenderPaid;
     bool renterRefunded;
@@ -402,7 +402,7 @@ contract LoanContract {
     {
         state = State.Inactive;
         //standing = //standing.Unresponsive;
-        renter.transfer(renterCollateral - lenderCollateral);
+        renter.transfer(renterCollateral - lenderCollateral - paymentAmount);
         lender.transfer(2* lenderCollateral - paymentAmount);
         emit PurchaseForced();
     }
