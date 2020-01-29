@@ -1,0 +1,346 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+   <title> Demo UI for LoanContract </title>
+</head>
+<body>
+   <h2>LoanContract</h2>
+
+   <p>Choose a Function to Call:</p>
+
+   <select id="function_selector">
+    <option value="empty" selected>select a function</option>
+    <option value="abortNoInterest">abortNoInterest</option>
+    <option value="demoFund">demoFund</option>
+   </select>
+   <p id="functionFormField"></p>
+
+   <p>Control Time:</p>
+   <button onclick="single_timestep()">one step</button>
+   <span id="timestep_button"></span>
+   <br>
+   <label for="largeTimestep_input">timesteps:</label>
+   <input id="largeTimestep_input">
+   <button onclick="large_timestep()">large step</button>
+   <span id="largeTimestep_button"></span>
+   
+
+   <p>Look at the internal public variables:</p> 
+   <br>
+   <button onclick="get_deadline()">Check deadline</button>
+   <span id="deadline_out"></span>
+   <br>
+   <button onclick="get_fakenow()">Check fakenow</button>
+   <span id="fakenow_out"></span>
+   <br>
+   <button onclick="get_graceDeadline()">Check graceDeadline</button>
+   <span id="graceDeadline_out"></span>
+   <br>
+   <button onclick="get_graceTime()">Check graceTime</button>
+   <span id="graceTime_out"></span>
+   <br>
+   <button onclick="get_lender()">Check lender</button>
+   <span id="lender_out"></span>
+   <br>
+   <button onclick="get_lenderCollateral()">Check lenderCollateral</button>
+   <span id="lenderCollateral_out"></span>
+   <br>
+   <button onclick="get_paymentAmount()">Check paymentAmount</button>
+   <span id="paymentAmount_out"></span>
+   <br>
+   <button onclick="get_paymentStored()">Check paymentStored</button>
+   <span id="paymentStored_out"></span>
+   <br>
+   <button onclick="get_rentPeriod()">Check rentPeriod</button>
+   <span id="rentPeriod_out"></span>
+   <br>
+   <button onclick="get_renter()">Check renter</button>
+   <span id="renter_out"></span>
+   <br>
+   <button onclick="get_renterCollateral()">Check renterCollateral</button>
+   <span id="renterCollateral_out"></span>
+   <br>
+   <button onclick="get_state()">Check state</button>
+   <span id="state_out"></span>
+
+
+
+<script>
+   web3 = new Web3(web3.currentProvider);
+
+   web3.currentProvider.enable();
+
+   web3.eth.getAccounts((error, accounts) => {
+    if (error) {
+      console.log(error);
+      return;
+    }
+    else
+      web3.eth.defaultAccount = accounts[0];
+   });
+
+   const contract_abi = [{"inputs":[],"payable":true,"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[],"name":"Aborted","type":"event"},{"anonymous":false,"inputs":[],"name":"ContractFunded","type":"event"},{"anonymous":false,"inputs":[],"name":"Created","type":"event"},{"anonymous":false,"inputs":[],"name":"InvitationToTrade","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemLoaned","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemReturned","type":"event"},{"anonymous":false,"inputs":[],"name":"LastChanceAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LateAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderDisputed","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderPaid","type":"event"},{"anonymous":false,"inputs":[],"name":"PurchaseForced","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterRefunded","type":"event"},{"anonymous":false,"inputs":[],"name":"ReturnScheduled","type":"event"},{"constant":true,"inputs":[],"name":"deadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"fakenow","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceDeadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lender","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lenderCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentStored","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"rentPeriod","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renter","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renterCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"internalType":"enum LoanContract.State","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"timestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint8","name":"_steps","type":"uint8"}],"name":"largeTimestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"demoFund","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"Giving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Recieved","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"scheduleReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"confirmReturned","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"payLender","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"refundRenterCollateral","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortNoInterest","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortLastChance","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameRenterRecieve","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameCannotGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortCouldntGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutGiving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutForcePurchace","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameFalseReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutReturnScheduling","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
+
+   const contract_address = "0x421960beA68CB092cd1D8fd3586cA37c53797562";
+
+   var contract_inst = web3.eth.contract(contract_abi).at(contract_address);
+
+   var functionMenu = document.getElementById("function_selector");
+   functionMenu.addEventListener("change", functionDisplayForm);
+
+   function functionDisplayForm(event) {
+     switch (functionMenu.value){
+      case "empty":
+         document.getElementById("functionFormField").innerHTML = "";
+         break;
+      case "abortNoInterest":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"abortNoInterest\">Click to abort the contract if no Renter has arrived:<button onclick=\"abortNoInterest()\">abort</button></span>";
+         break;
+      case "demoFund":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"demoFund\"><label for=\"demoFund_input\">Enter the amount of ETH to send as the Lender for collateral:</label><input id=\"demoFund_input\"><button onclick=\"demoFund()\">fund</button></span>";
+         break;
+     }
+   }
+
+   function demoFund()
+   {
+      contract_inst.methods.demoFund().send({from: web3.eth.defaultAccount, value: web3.utils.toWei(Number(document.getElementById("demoFund_input").value), 'ether')}, (err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("demoFund").innerText += "Success!"
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function abortNoInterest()
+   {
+      contract_inst.abortNoInterest((err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("abortNoInterest").innerText += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function single_timestep()
+   {
+      contract_inst.timestep((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("timestep_button").innerText = "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function large_timestep()
+   {
+      contract_inst.largeTimestep(Number(document.getElementById("largeTimestep_input").value), (err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("largeTimestep_button").innerText = "Success!"
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function get_deadline()
+   {
+      contract_inst.deadline((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("deadline_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_fakenow()
+   {
+      contract_inst.fakenow((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("fakenow_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_graceDeadline()
+   {
+      contract_inst.graceDeadline((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("graceDeadline_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_graceTime()
+   {
+      contract_inst.graceTime((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("graceTime_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_lender()
+   {
+      contract_inst.lender((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("lender_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_lenderCollateral()
+   {
+      contract_inst.lenderCollateral((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("lenderCollateral_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_paymentAmount()
+   {
+      contract_inst.paymentAmount((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("paymentAmount_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_paymentStored()
+   {
+      contract_inst.paymentStored((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("paymentStored_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_rentPeriod()
+   {
+      contract_inst.rentPeriod((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("rentPeriod_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_renter()
+   {
+      contract_inst.renter((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("renter_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_renterCollateral()
+   {
+      contract_inst.renterCollateral((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("renterCollateral_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+   function get_state()
+   {
+      contract_inst.state((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("state_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+</script>
+
+</body>
+</html>
