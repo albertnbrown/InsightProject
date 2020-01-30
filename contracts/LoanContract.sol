@@ -14,10 +14,10 @@ contract LoanContract {
     uint public deadline;
     uint public graceDeadline;
 
-    bool lenderPaid;
-    bool renterRefunded;
+    uint lenderBalance;
+    uint renterBalance;
 
-	enum State { Created, Collaterized, Transferring, Loaned, ReturnScheduled, Returned, Refunded, Inactive, Late } //late is unused, refunded is kinda used but maybe it shouldn't be
+	enum State { Created, Collaterized, Transferring, Loaned, ReturnScheduled, Returned, Refund, Inactive, Late } //late is unused, refunded is kinda used but maybe it shouldn't be
 	//enum //standing { Friendly, Unconfirmed, Dispute, Unresponsive } //still not sure what I want this for, but it does kinda leave metadata for postmortum
     State public state;
     ////standing public //standing;
@@ -114,22 +114,24 @@ contract LoanContract {
     	_; 
     }
 
-    event Created(); //consider giving the lender address
-    event ContractFunded(); //consider giving the renter address
+    event Created(); 
+    event ContractFunded(); 
 
     event InvitationToTrade();
     event ItemLoaned();
     event ReturnScheduled();
     event ItemReturned();
-    event RenterRefunded();
-    event LenderPaid();
-    event RenterInactivity();
+
+    event RenterWithdrew();
+    event LenderWithdrew();
+    event FinishedSuccessfully();
 
     event Aborted();
     event LastChanceAborted();
     event LateAborted();
 
     event LenderInactivity();
+    event RenterInactivity();
     event PurchaseForced();
     event LenderDisputed();
 
@@ -142,30 +144,28 @@ contract LoanContract {
     /// graceTime: how long will people be given to dispute messages the other party sends to the contract
     /// as well as time to take the actions required to transfer the item back and forth
     constructor(uint _requiredPayment, uint _requiredRenterCollateral, uint _rentTime, uint _deadline, uint _graceTimePeriod) public payable {
+        require (
+            msg.value <= _requiredRenterCollateral && 2*_requiredPayment < msg.value,
+            "Please make smart choices in your payment scheme. Refer to documentation for suggestions."
+        );
+        
+        require(
+            now + _rentTime + 2*_graceTimePeriod < _deadline,
+            "Invalid timeframe, allow for two grace periods between the end of the rental period and the deadline."
+        );
+
+        lenderBalance = 0;
+        renterBalance = 0;
+
         lender = msg.sender;
         lenderCollateral = msg.value;
         
         renterCollateral = _requiredRenterCollateral;
         paymentAmount = _requiredPayment;
-
-
-        require (
-        	paymentAmount < renterCollateral && paymentAmount < lenderCollateral,
-        	"Please make smart choices in your payment scheme. Refer to documentation for suggestions."
-        );
-        
-
-        require(
-        	now + _rentTime + 2*_graceTimePeriod < _deadline,
-        	"Invalid timeframe, allow for two grace periods between the end of the rental period and the deadline."
-        );
         
         rentPeriod = _rentTime;
         deadline = _deadline;
         graceTime = _graceTimePeriod;
-
-        lenderPaid = false;
-        renterRefunded = false;
 
         emit Created();
     }
@@ -257,46 +257,46 @@ contract LoanContract {
     {
     	state = State.Returned;
     	graceDeadline = now + graceTime;
-    	//standing = //standing.Friendly;
     	emit ItemReturned();
     }
 
-    /// This pays and refunds the lender
-	function payLender()
+
+    function Finalize()
         public
-        onlyLender
+        onlyMemeber
         inState(State.Returned)
         afterGracePeriod
     {
-    	require (
-    		!lenderPaid,
-    		"Nice try, buck-o"
-    	);
-        if(renterRefunded){
-            state = State.Refunded;
-        }
-        lenderPaid = true;
-    	lender.transfer(lenderCollateral + paymentStored);
-        emit LenderPaid();
+        state = State.Inactive;
+        lenderBalance = lenderCollateral + paymentStored;
+        renterBalance = renterCollateral;
+        emit FinishedSuccessfully();
     }
 
-    /// This function refunds the renter
-    function refundRenterCollateral()
+    /// This pays and refunds the lender whatever they're owed
+	function withdrawLender()
         public
-        onlyRenter
-        inState(State.Returned)
+        onlyLender
+        inState(State.Inactive)
         afterGracePeriod
     {
-    	require (
-    		!renterRefunded,
-    		"Nice try, buck-o"
-    	);
-        if(lenderPaid){
-            state = State.Refunded;
-        }
-        renterRefunded = true;
-    	renter.transfer(renterCollateral);
-        emit RenterRefunded();
+        uint amount = lenderBalance;
+        lenderBalance = 0;
+    	lender.transfer(amount);
+        emit LenderWithdrew();
+    }
+
+    /// This function refunds the renter whatever they're owed
+    function withdrawRenter()
+        public
+        onlyRenter
+        inState(State.Inactive)
+        afterGracePeriod
+    {
+        uint amount = renterBalance;
+        renterBalance = 0;
+        renter.transfer(amount);
+        emit RenterWithdrew();
     }
 
     /////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ contract LoanContract {
         inState(State.Created)
     {
         state = State.Inactive;
-        lender.transfer(address(this).balance);//maybe add the safeguard of transferring to lender the amount they're owned and send to renter the rest
+        lenderBalance = address(this).balance;
         emit Aborted();
     }
 
@@ -326,8 +326,8 @@ contract LoanContract {
         inGracePeriod
     {
         state = State.Inactive;
-        renter.transfer(renterCollateral + paymentStored);
-        lender.transfer(address(this).balance);
+        renterBalance = renterCollateral + paymentStored;
+        lenderBalance = lenderCollateral;
         emit LastChanceAborted();
     }
 
@@ -342,7 +342,6 @@ contract LoanContract {
     	inDisputePeriod
     {
     	state = State.Inactive;
-    	//standing = //standing.Dispute;
     	emit LenderDisputed();
     }
 
@@ -357,9 +356,8 @@ contract LoanContract {
     	inDisputePeriod
     {
     	state = State.Inactive;
-    	//standing = //standing.Unresponsive;
-    	lender.transfer(lenderCollateral - 2*paymentAmount);
-    	renter.transfer(renterCollateral - paymentAmount);
+    	lenderBalance = lenderCollateral - 2*paymentAmount;
+    	renterBalance = renterCollateral - paymentAmount;
     	emit RenterInactivity();
     }
 
@@ -373,8 +371,8 @@ contract LoanContract {
     	afterDisputePeriod
     {
     	state = State.Inactive;
-    	lender.transfer(lenderCollateral);//should probably this.balance to be safe
-    	renter.transfer(renterCollateral + paymentStored);
+    	lenderBalance = lenderCollateral;
+    	renterBalance = renterCollateral + paymentStored;
     	emit LateAborted();
     }
 
@@ -387,9 +385,8 @@ contract LoanContract {
     	afterDisputePeriod
     {
     	state = State.Inactive;
-    	//standing = //standing.Unresponsive;
-    	lender.transfer(lenderCollateral - paymentAmount);
-    	renter.transfer(renterCollateral + paymentStored);
+    	lenderBalance = lenderCollateral - paymentAmount;
+    	renterBalance = renterCollateral + paymentStored;
     	emit LenderInactivity();
     }
 
@@ -405,9 +402,8 @@ contract LoanContract {
         afterGracePeriod
     {
         state = State.Inactive;
-        //standing = //standing.Unresponsive;
-        renter.transfer(renterCollateral - lenderCollateral - paymentAmount);
-        lender.transfer(2* lenderCollateral - paymentAmount);
+        renterBalance = renterCollateral - lenderCollateral - paymentAmount;
+        lenderBalance = 2*lenderCollateral - paymentAmount;
         emit PurchaseForced();
     }
 
@@ -421,7 +417,6 @@ contract LoanContract {
         inGracePeriod
     {
         state = State.Inactive;
-        //standing = //standing.Dispute;
         emit LenderDisputed();
     }
 
@@ -435,9 +430,8 @@ contract LoanContract {
         afterGracePeriod
     {
         state = State.Inactive;
-        //standing = //standing.Unresponsive;
-        renter.transfer(renterCollateral + paymentAmount);
-        lender.transfer(lenderCollateral);
+        renterBalance = renterCollateral + paymentAmount;
+        lenderBalance = lenderCollateral;
         emit LenderInactivity();
     }
 
