@@ -11,8 +11,27 @@
 
    <select id="function_selector">
     <option value="empty" selected>select a function</option>
-    <option value="abortNoInterest">abortNoInterest</option>
+
+    <option value="Giving">Giving</option>
+    <option value="Recieved">Recieved</option>
+    <option value="ScheduleReturn">ScheduleReturn</option>
+    <option value="ConfirmReturned">ConfirmReturned</option>
+
+    <option value="withdrawLender">withdrawLender</option>
+    <option value="withdrawRenter">withdrawRenter</option>
+
+    <option value="fundAsRenter">fundAsRenter</option>
     <option value="demoFund">demoFund</option>
+
+    <option value="abortNoInterest">abortNoInterest</option>
+    <option value="abortLastChance">abortLastChance</option>
+    <option value="abortTimeoutGiving">abortTimeoutGiving</option>
+    <option value="abortCouldntGive">abortCouldntGive</option>
+    <option value="abortTimeoutForcePurchace">abortTimeoutForcePurchace</option>
+
+    <option value="blameRenterRecieve">blameRenterRecieve</option>
+    <option value="blameCannotGive">blameCannotGive</option>
+    <option value="blameFalseReturn">blameFalseReturn</option>
    </select>
    <p id="functionFormField"></p>
 
@@ -26,10 +45,10 @@
    <span id="largeTimestep_button"></span>
    
 
-   <p>Look at the internal public variables:</p> 
+   <p>Look at the internal public variables:</p>
    <br>
-   <button onclick="get_deadline()">Check deadline</button>
-   <span id="deadline_out"></span>
+   <button onclick="get_state()">Check state</button>
+   <span id="state_out"></span>
    <br>
    <button onclick="get_fakenow()">Check fakenow</button>
    <span id="fakenow_out"></span>
@@ -37,14 +56,20 @@
    <button onclick="get_graceDeadline()">Check graceDeadline</button>
    <span id="graceDeadline_out"></span>
    <br>
+   <button onclick="get_deadline()">Check deadline</button>
+   <span id="deadline_out"></span>
+   <br>
+   <button onclick="get_rentPeriod()">Check rentPeriod</button>
+   <span id="rentPeriod_out"></span>
+   <br>
    <button onclick="get_graceTime()">Check graceTime</button>
    <span id="graceTime_out"></span>
    <br>
    <button onclick="get_lender()">Check lender</button>
    <span id="lender_out"></span>
    <br>
-   <button onclick="get_lenderCollateral()">Check lenderCollateral</button>
-   <span id="lenderCollateral_out"></span>
+   <button onclick="get_renter()">Check renter</button>
+   <span id="renter_out"></span>
    <br>
    <button onclick="get_paymentAmount()">Check paymentAmount</button>
    <span id="paymentAmount_out"></span>
@@ -52,24 +77,23 @@
    <button onclick="get_paymentStored()">Check paymentStored</button>
    <span id="paymentStored_out"></span>
    <br>
-   <button onclick="get_rentPeriod()">Check rentPeriod</button>
-   <span id="rentPeriod_out"></span>
-   <br>
-   <button onclick="get_renter()">Check renter</button>
-   <span id="renter_out"></span>
+   <button onclick="get_lenderCollateral()">Check lenderCollateral</button>
+   <span id="lenderCollateral_out"></span>
    <br>
    <button onclick="get_renterCollateral()">Check renterCollateral</button>
    <span id="renterCollateral_out"></span>
-   <br>
-   <button onclick="get_state()">Check state</button>
-   <span id="state_out"></span>
 
 
 
+<!--<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.2.4/dist/web3.min.js"></script>-->
+<script src="./web3-browserify.js"></script>
 <script>
-   web3 = new Web3(web3.currentProvider);
+   //var web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
+   const web3 = new Web3(window.web3.currentProvider);
+   //var web3 = new Web3(ethereum);
 
-   web3.currentProvider.enable();
+   //web3.currentProvider.enable();
+   ethereum.enable();
 
    web3.eth.getAccounts((error, accounts) => {
     if (error) {
@@ -80,36 +104,78 @@
       web3.eth.defaultAccount = accounts[0];
    });
 
-   const contract_abi = [{"inputs":[],"payable":true,"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[],"name":"Aborted","type":"event"},{"anonymous":false,"inputs":[],"name":"ContractFunded","type":"event"},{"anonymous":false,"inputs":[],"name":"Created","type":"event"},{"anonymous":false,"inputs":[],"name":"InvitationToTrade","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemLoaned","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemReturned","type":"event"},{"anonymous":false,"inputs":[],"name":"LastChanceAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LateAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderDisputed","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderPaid","type":"event"},{"anonymous":false,"inputs":[],"name":"PurchaseForced","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterRefunded","type":"event"},{"anonymous":false,"inputs":[],"name":"ReturnScheduled","type":"event"},{"constant":true,"inputs":[],"name":"deadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"fakenow","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceDeadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lender","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lenderCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentStored","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"rentPeriod","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renter","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renterCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"internalType":"enum LoanContract.State","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"timestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint8","name":"_steps","type":"uint8"}],"name":"largeTimestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"demoFund","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"Giving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Recieved","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"scheduleReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"confirmReturned","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"payLender","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"refundRenterCollateral","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortNoInterest","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortLastChance","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameRenterRecieve","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameCannotGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortCouldntGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutGiving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutForcePurchace","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameFalseReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutReturnScheduling","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
+   const contract_abi = [{"inputs":[],"payable":true,"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[],"name":"Aborted","type":"event"},{"anonymous":false,"inputs":[],"name":"ContractFunded","type":"event"},{"anonymous":false,"inputs":[],"name":"Created","type":"event"},{"anonymous":false,"inputs":[],"name":"InvitationToTrade","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemLoaned","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemReturned","type":"event"},{"anonymous":false,"inputs":[],"name":"LastChanceAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LateAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderDisputed","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderPaid","type":"event"},{"anonymous":false,"inputs":[],"name":"PurchaseForced","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterRefunded","type":"event"},{"anonymous":false,"inputs":[],"name":"ReturnScheduled","type":"event"},{"constant":true,"inputs":[],"name":"deadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"fakenow","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceDeadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lender","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lenderCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentStored","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"rentPeriod","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renter","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renterCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"internalType":"enum LoanContractDemo.State","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"timestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint8","name":"_steps","type":"uint8"}],"name":"largeTimestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"demoFund","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"fundAsRenter","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"Giving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Recieved","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"ScheduleReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"ConfirmReturned","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawLender","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawRenter","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortNoInterest","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortLastChance","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameRenterRecieve","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameCannotGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortCouldntGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutGiving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutForcePurchace","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameFalseReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutReturnScheduling","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
 
-   const contract_address = "0x421960beA68CB092cd1D8fd3586cA37c53797562";
+   const contract_address = "0xA61069bD9b39813701e2e18f5B8371A3792cFE52";
 
-   var contract_inst = web3.eth.contract(contract_abi).at(contract_address);
+   var contract_inst = new web3.eth.Contract(contract_abi, contract_address);
 
    var functionMenu = document.getElementById("function_selector");
    functionMenu.addEventListener("change", functionDisplayForm);
 
-   function functionDisplayForm(event) {
+   function functionDisplayForm(event)
+   {
      switch (functionMenu.value){
-      case "empty":
-         document.getElementById("functionFormField").innerHTML = "";
+      case "Giving":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"Giving\">Click to signal you wish to give the item: <button onclick=\"Giving()\">notify</button></span>";
+         break;
+      case "Recieved":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"Recieved\">Click to confirm you were given the item: <button onclick=\"Recieved()\">confirm</button></span>";
+         break;
+      case "ScheduleReturn":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"ScheduleReturn\">Click to signal the start of the return period: <button onclick=\"ScheduleReturn()\">notify</button></span>";
+         break;
+      case "ConfirmReturned":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"ConfirmReturned\">Click to confirm you have returned the item: <button onclick=\"ConfirmReturned()\">confirm</button></span>";
+         break;
+      case "withdrawLender":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"withdrawLender\">Click to withdraw any outstanding balance as the Lender: <button onclick=\"withdrawLender()\">withdraw</button></span>";
+         break;
+      case "withdrawRenter":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"withdrawRenter\">Click to withdraw any outstanding balance as the Renter: <button onclick=\"withdrawRenter()\">withdraw</button></span>";
+         break;
+      case "blameRenterRecieve":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"blameRenterRecieve\">Click to blame the Renter for failing to report item reciept. WARNING THIS ENDS THE CONTRACT AND DESTROYS COLLATERAL <button onclick=\"blameRenterRecieve()\">destory</button></span>";
+         break;
+      case "blameCannotGive":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"blameCannotGive\">Click to penalize both parties (as Lender) to punish suspicious renter activity refusing the item. WARNING THIS ENDS THE CONTRACT <button onclick=\"blameCannotGive()\">penalize</button></span>";
+         break;
+      case "blameFalseReturn":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"blameFalseReturn\">Click to blame the Renter for falsely reporting item return. WARNING THIS ENDS THE CONTRACT AND DESTROYS COLLATERAL <button onclick=\"blameFalseReturn()\">destroy</button></span>";
+         break;
+      case "abortTimeoutForcePurchace":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"abortTimeoutForcePurchace\">Click to force the purchase of the item after timeout if either party refused the return process: <button onclick=\"abortTimeoutForcePurchace()\">abort</button></span>";
          break;
       case "abortNoInterest":
-         document.getElementById("functionFormField").innerHTML = "<span id=\"abortNoInterest\">Click to abort the contract if no Renter has arrived:<button onclick=\"abortNoInterest()\">abort</button></span>";
+         document.getElementById("functionFormField").innerHTML = "<span id=\"abortNoInterest\">Click to abort the contract if no Renter has arrived: <button onclick=\"abortNoInterest()\">abort</button></span>";
+         break;
+      case "abortLastChance":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"abortLastChance\">Click to abort the contract as either party before the grace period ends: <button onclick=\"abortLastChance()\">abort</button></span>";
+         break;
+      case "abortCouldntGive":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"abortCouldntGive\">Click to abort the contract if the full dispute period for initialy Giving the item has timed out with inaction: <button onclick=\"abortCouldntGive()\">abort</button></span>";
+         break;
+      case "abortTimeoutGiving":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"abortTimeoutGiving\">Click to abort the contract if the Lender is inactive on starting the loaning process: <button onclick=\"abortTimeoutGiving()\">abort</button></span>";
          break;
       case "demoFund":
-         document.getElementById("functionFormField").innerHTML = "<span id=\"demoFund\"><label for=\"demoFund_input\">Enter the amount of ETH to send as the Lender for collateral:</label><input id=\"demoFund_input\"><button onclick=\"demoFund()\">fund</button></span>";
+         document.getElementById("functionFormField").innerHTML = "<span id=\"demoFund\"><label for=\"demoFund_input\">Enter the amount of ETH to send as the Lender for collateral: </label><input id=\"demoFund_input\"><button onclick=\"demoFund()\">fund</button></span>";
          break;
+      case "fundAsRenter":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"fundAsRenter\"><label for=\"fundAsRenter_input\">Enter the amount of ETH to send as the Renter for collateral and payment: </label><input id=\"fundAsRenter_input\"><button onclick=\"fundAsRenter()\">fund</button></span>";
+         break;
+      default:
+         document.getElementById("functionFormField").innerHTML = "";
      }
    }
 
-   function demoFund()
+   function Giving()
    {
-      contract_inst.methods.demoFund().send({from: web3.eth.defaultAccount, value: web3.utils.toWei(Number(document.getElementById("demoFund_input").value), 'ether')}, (err, res) => 
+      contract_inst.methods.Giving().send({from: web3.eth.defaultAccount},(err, res) =>
       {
          if(!err)
          {
-            document.getElementById("demoFund").innerText += "Success!"
+            document.getElementById("Giving").innerHTML += "Success!";
             console.log(res);
          }
          else
@@ -117,13 +183,209 @@
       });
    }
 
-   function abortNoInterest()
+   function Recieved()
    {
-      contract_inst.abortNoInterest((err, res) =>
+      contract_inst.methods.Recieved().send({from: web3.eth.defaultAccount},(err, res) =>
       {
          if(!err)
          {
-            document.getElementById("abortNoInterest").innerText += "Success!";
+            document.getElementById("Recieved").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function ScheduleReturn()
+   {
+      contract_inst.methods.ScheduleReturn().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("ScheduleReturn").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function ConfirmReturned()
+   {
+      contract_inst.methods.ConfirmReturned().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("ConfirmReturned").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function withdrawLender()
+   {
+      contract_inst.methods.withdrawLender().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("withdrawLender").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function withdrawRenter()
+   {
+      contract_inst.methods.withdrawRenter().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("withdrawRenter").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function blameRenterRecieve()
+   {
+      contract_inst.methods.blameRenterRecieve().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("blameRenterRecieve").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function blameCannotGive()
+   {
+      contract_inst.methods.blameCannotGive().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("blameCannotGive").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function blameFalseReturn()
+   {
+      contract_inst.methods.blameFalseReturn().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("blameFalseReturn").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function demoFund()
+   {
+      contract_inst.methods.demoFund().send({from: web3.eth.defaultAccount, value: web3.utils.toWei(document.getElementById("demoFund_input").value, 'ether')}, (err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("demoFund").innerHTML += "Success!"
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function fundAsRenter()
+   {
+      contract_inst.methods.fundAsRenter().send({from: web3.eth.defaultAccount, value: web3.utils.toWei(document.getElementById("fundAsRenter_input").value, 'ether')}, (err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("fundAsRenter").innerHTML += "Success!"
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function abortTimeoutForcePurchace()
+   {
+      contract_inst.methods.abortTimeoutForcePurchace().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("abortTimeoutForcePurchace").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+         });
+   }
+
+   function abortLastChance()
+   {
+      contract_inst.methods.abortLastChance().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("abortLastChance").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+         });
+   }
+
+   function abortNoInterest()
+   {
+      contract_inst.methods.abortNoInterest().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("abortNoInterest").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function abortCouldntGive()
+   {
+      contract_inst.methods.abortCouldntGive().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("abortCouldntGive").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
+   function abortTimeoutGiving()
+   {
+      contract_inst.methods.abortTimeoutGiving().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("abortTimeoutGiving").innerHTML += "Success!";
             console.log(res);
          }
          else
@@ -133,7 +395,7 @@
 
    function single_timestep()
    {
-      contract_inst.timestep((err, res) => 
+      contract_inst.methods.timestep().send({from: web3.eth.defaultAccount},(err, res) => 
       {
          if(!err)
          {
@@ -148,7 +410,7 @@
 
    function large_timestep()
    {
-      contract_inst.largeTimestep(Number(document.getElementById("largeTimestep_input").value), (err, res) => 
+      contract_inst.methods.largeTimestep(Number(document.getElementById("largeTimestep_input").value), ).send({from: web3.eth.defaultAccount},(err, res) => 
       {
          if(!err)
          {
@@ -162,7 +424,7 @@
 
    function get_deadline()
    {
-      contract_inst.deadline((err, res) => 
+      contract_inst.methods.deadline().call((err, res) => 
       {
          if(!err)
          {
@@ -177,7 +439,7 @@
 
    function get_fakenow()
    {
-      contract_inst.fakenow((err, res) => 
+      contract_inst.methods.fakenow().call((err, res) => 
       {
          if(!err)
          {
@@ -192,7 +454,7 @@
 
    function get_graceDeadline()
    {
-      contract_inst.graceDeadline((err, res) => 
+      contract_inst.methods.graceDeadline().call((err, res) => 
       {
          if(!err)
          {
@@ -207,7 +469,7 @@
 
    function get_graceTime()
    {
-      contract_inst.graceTime((err, res) => 
+      contract_inst.methods.graceTime().call((err, res) => 
       {
          if(!err)
          {
@@ -222,7 +484,7 @@
 
    function get_lender()
    {
-      contract_inst.lender((err, res) => 
+      contract_inst.methods.lender().call((err, res) => 
       {
          if(!err)
          {
@@ -237,7 +499,7 @@
 
    function get_lenderCollateral()
    {
-      contract_inst.lenderCollateral((err, res) => 
+      contract_inst.methods.lenderCollateral().call((err, res) => 
       {
          if(!err)
          {
@@ -252,7 +514,7 @@
 
    function get_paymentAmount()
    {
-      contract_inst.paymentAmount((err, res) => 
+      contract_inst.methods.paymentAmount().call((err, res) => 
       {
          if(!err)
          {
@@ -267,7 +529,7 @@
 
    function get_paymentStored()
    {
-      contract_inst.paymentStored((err, res) => 
+      contract_inst.methods.paymentStored().call((err, res) => 
       {
          if(!err)
          {
@@ -282,7 +544,7 @@
 
    function get_rentPeriod()
    {
-      contract_inst.rentPeriod((err, res) => 
+      contract_inst.methods.rentPeriod().call((err, res) => 
       {
          if(!err)
          {
@@ -297,7 +559,7 @@
 
    function get_renter()
    {
-      contract_inst.renter((err, res) => 
+      contract_inst.methods.renter().call((err, res) => 
       {
          if(!err)
          {
@@ -312,7 +574,7 @@
 
    function get_renterCollateral()
    {
-      contract_inst.renterCollateral((err, res) => 
+      contract_inst.methods.renterCollateral().call((err, res) => 
       {
          if(!err)
          {
@@ -327,11 +589,39 @@
 
    function get_state()
    {
-      contract_inst.state((err, res) => 
+      contract_inst.methods.state().call((err, res) => 
       {
          if(!err)
          {
-            document.getElementById("state_out").innerText = res;
+            switch(res){
+               case "0":
+                  document.getElementById("state_out").innerText = "Created";
+                  break;
+               case "1":
+                  document.getElementById("state_out").innerText = "Collaterized";
+                  break;
+               case "2":
+                  document.getElementById("state_out").innerText = "Transferring";
+                  break;
+               case "3":
+                  document.getElementById("state_out").innerText = "Loaned";
+                  break;
+               case "4":
+                  document.getElementById("state_out").innerText = "ReturnScheduled";
+                  break;
+               case "5":
+                  document.getElementById("state_out").innerText = "Returned";
+                  break;
+               case "6":
+                  document.getElementById("state_out").innerText = "Refunded";
+                  break;
+               case "7":
+                  document.getElementById("state_out").innerText = "Inactive";
+                  break;
+               case "8":
+                  document.getElementById("state_out").innerText = "Late";
+                  break;
+            }
             console.log(res);
          }
          else

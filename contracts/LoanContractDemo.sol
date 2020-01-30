@@ -1,6 +1,6 @@
 pragma solidity >=0.4.22 <0.7.0;
 
-contract LoanContract {
+contract LoanContractDemo {
     address payable public lender;
     address payable public renter;
 
@@ -182,6 +182,30 @@ contract LoanContract {
         require (msg.value == lenderCollateral);
     }
 
+    /// This is how the renter enters the contract
+    function fundAsRenter()
+        public
+        payable
+        inState(State.Created)
+    {
+        require(
+            (fakenow + rentPeriod < deadline),
+            "Not enough remaining time to rent."
+        );
+        require(
+            msg.value >= renterCollateral + paymentAmount,
+            "Not enough funds for payment and collateral."
+        );
+
+        state = State.Collaterized;
+
+        renter = msg.sender; //think about putting something here to account for if there somehow is already a renter
+        paymentStored = msg.value - renterCollateral;
+        deadline = fakenow + rentPeriod;
+        graceDeadline = fakenow + graceTime;
+        emit ContractFunded();
+    }
+
     /// Confirm that you (the lender) will send the item.
     /// This begins the transfer period which is graceTime in length
     function Giving()
@@ -217,7 +241,7 @@ contract LoanContract {
 
     /// The Lender schedules a return with one grace period of the deadline
     /// This begins the transfer period which is graceTime in length
-    function scheduleReturn()
+    function ScheduleReturn()
         public
         onlyLender
         inState(State.Loaned)
@@ -236,7 +260,7 @@ contract LoanContract {
     }
 
     /// Confirm that you (the renter) returned the item.
-    function confirmReturned()
+    function ConfirmReturned()
         public
         onlyRenter
         inState(State.ReturnScheduled)
@@ -249,7 +273,7 @@ contract LoanContract {
     }
 
     /// This pays and refunds the lender
-    function payLender()
+    function withdrawLender()
         public
         onlyLender
         inState(State.Returned)
@@ -268,7 +292,7 @@ contract LoanContract {
     }
 
     /// This function refunds the renter
-    function refundRenterCollateral()
+    function withdrawRenter()
         public
         onlyRenter
         inState(State.Returned)

@@ -230,7 +230,7 @@ contract LoanContract {
 
     /// The Lender schedules a return with one grace period of the deadline
     /// This begins the transfer period which is graceTime in length
-    function scheduleReturn()
+    function ScheduleReturn()
     	public
     	onlyLender
     	inState(State.Loaned)
@@ -249,7 +249,7 @@ contract LoanContract {
     }
 
     /// Confirm that you (the renter) returned the item.
-    function confirmReturned()
+    function ConfirmReturned()
     	public
     	onlyRenter
     	inState(State.ReturnScheduled)
