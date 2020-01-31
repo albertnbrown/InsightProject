@@ -1,4 +1,5 @@
 pragma solidity >=0.4.22 <0.7.0;
+//pragma experimental SMTChecker;
 
 contract LoanContract {
 	address payable public lender;
@@ -14,8 +15,8 @@ contract LoanContract {
     uint public deadline;
     uint public graceDeadline;
 
-    uint lenderBalance;
-    uint renterBalance;
+    uint public lenderBalance;
+    uint public renterBalance;
 
 	enum State { Created, Collaterized, Transferring, Loaned, ReturnScheduled, Returned, Refund, Inactive, Late } //late is unused, refunded is kinda used but maybe it shouldn't be
 	//enum //standing { Friendly, Unconfirmed, Dispute, Unresponsive } //still not sure what I want this for, but it does kinda leave metadata for postmortum
@@ -92,7 +93,7 @@ contract LoanContract {
             "You missed the Dispute period."
         );
         require (
-            now > graceDeadline,
+            now >= graceDeadline,
             "Wait until the grace period ends."
         );
         _; 
@@ -100,7 +101,7 @@ contract LoanContract {
 
     modifier afterDisputePeriod() { 
         require (
-            now - graceTime > graceDeadline,
+            now - graceTime >= graceDeadline,
             "Wait for the dispute period to end."
         );
         _; 

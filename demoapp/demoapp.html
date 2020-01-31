@@ -5,7 +5,9 @@
    <title> Demo UI for LoanContract </title>
 </head>
 <body>
-   <h2>LoanContract</h2>
+   <h2>LoanContract
+   <button onclick="demoAdimnReset()">RESET</button>
+   <span id="demoAdimnReset"></span></h2>
 
    <p>Choose a Function to Call:</p>
 
@@ -29,6 +31,7 @@
     <option value="abortTimeoutGiving">abortTimeoutGiving</option>
     <option value="abortCouldntGive">abortCouldntGive</option>
     <option value="abortTimeoutForcePurchace">abortTimeoutForcePurchace</option>
+    <option value="abortTimeoutReturnScheduling">abortTimeoutReturnScheduling</option>
 
     <option value="blameRenterRecieve">blameRenterRecieve</option>
     <option value="blameCannotGive">blameCannotGive</option>
@@ -47,6 +50,12 @@
    
 
    <p>Look at the internal public variables:</p>
+   <br>
+   <button onclick="get_lenderBalance()">Check lenderBalance</button>
+   <span id="lenderBalance_out"></span>
+   <br>
+   <button onclick="get_renterBalance()">Check renterBalance</button>
+   <span id="renterBalance_out"></span>
    <br>
    <button onclick="get_state()">Check state</button>
    <span id="state_out"></span>
@@ -105,9 +114,9 @@
       web3.eth.defaultAccount = accounts[0];
    });
 
-   const contract_abi = [{"inputs":[],"payable":true,"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[],"name":"Aborted","type":"event"},{"anonymous":false,"inputs":[],"name":"ContractFunded","type":"event"},{"anonymous":false,"inputs":[],"name":"Created","type":"event"},{"anonymous":false,"inputs":[],"name":"FinishedSuccessfully","type":"event"},{"anonymous":false,"inputs":[],"name":"InvitationToTrade","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemLoaned","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemReturned","type":"event"},{"anonymous":false,"inputs":[],"name":"LastChanceAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LateAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderDisputed","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderWithdrew","type":"event"},{"anonymous":false,"inputs":[],"name":"PurchaseForced","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterWithdrew","type":"event"},{"anonymous":false,"inputs":[],"name":"ReturnScheduled","type":"event"},{"constant":true,"inputs":[],"name":"deadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"fakenow","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceDeadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lender","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lenderCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentStored","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"rentPeriod","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renter","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renterCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"internalType":"enum LoanContractDemo.State","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"timestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint8","name":"_steps","type":"uint8"}],"name":"largeTimestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"demoFund","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"fundAsRenter","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"Giving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Recieved","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"ScheduleReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"ConfirmReturned","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Finalize","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawLender","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawRenter","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortNoInterest","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortLastChance","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameRenterRecieve","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameCannotGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortCouldntGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutGiving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutForcePurchace","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameFalseReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutReturnScheduling","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
+   const contract_abi = [{"inputs":[],"payable":true,"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[],"name":"Aborted","type":"event"},{"anonymous":false,"inputs":[],"name":"ContractFunded","type":"event"},{"anonymous":false,"inputs":[],"name":"Created","type":"event"},{"anonymous":false,"inputs":[],"name":"FinishedSuccessfully","type":"event"},{"anonymous":false,"inputs":[],"name":"InvitationToTrade","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemLoaned","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemReturned","type":"event"},{"anonymous":false,"inputs":[],"name":"LastChanceAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LateAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderDisputed","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderWithdrew","type":"event"},{"anonymous":false,"inputs":[],"name":"PurchaseForced","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterWithdrew","type":"event"},{"anonymous":false,"inputs":[],"name":"ReturnScheduled","type":"event"},{"constant":true,"inputs":[],"name":"deadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"fakenow","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceDeadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lender","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lenderBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lenderCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentStored","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"rentPeriod","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renter","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renterBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renterCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"internalType":"enum LoanContractDemo.State","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"timestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint8","name":"_steps","type":"uint8"}],"name":"largeTimestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"demoAdimnReset","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"demoFund","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"fundAsRenter","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"Giving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Recieved","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"ScheduleReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"ConfirmReturned","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Finalize","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawLender","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawRenter","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortNoInterest","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortLastChance","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameRenterRecieve","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameCannotGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortCouldntGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutGiving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutForcePurchace","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameFalseReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutReturnScheduling","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
 
-   const contract_address = "0x4e1ce0Eb7BCF0afFba87Bb20d63e624229626afE";
+   const contract_address = "0xF2B8E85194782F0056db57F908a939A92fc802E7";
 
    var contract_inst = new web3.eth.Contract(contract_abi, contract_address);
 
@@ -117,6 +126,9 @@
    function functionDisplayForm(event)
    {
      switch (functionMenu.value){
+      case "abortTimeoutReturnScheduling":
+         document.getElementById("functionFormField").innerHTML = "<span id=\"abortTimeoutReturnScheduling\">The Lender has not scheduled the return of the item within the deadline, you may now release yourself from contract freely and reclaim your collateral: <button onclick=\"abortTimeoutReturnScheduling()\">abort</button></span>";
+         break;
       case "Finalize":
          document.getElementById("functionFormField").innerHTML = "<span id=\"Finalize\">Finalize the transaction as going smoothly so members can withdraw money: <button onclick=\"Finalize()\">finalize</button></span>";
          break;
@@ -313,6 +325,20 @@
       });
    }
 
+   function demoAdimnReset()
+   {
+      contract_inst.methods.demoAdimnReset().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("demoAdimnReset").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
    function demoFund()
    {
       contract_inst.methods.demoFund().send({from: web3.eth.defaultAccount, value: web3.utils.toWei(document.getElementById("demoFund_input").value, 'ether')}, (err, res) => 
@@ -411,6 +437,20 @@
       });
    }
 
+   function abortTimeoutReturnScheduling()
+   {
+      contract_inst.methods.abortTimeoutReturnScheduling().send({from: web3.eth.defaultAccount},(err, res) =>
+      {
+         if(!err)
+         {
+            document.getElementById("abortTimeoutReturnScheduling").innerHTML += "Success!";
+            console.log(res);
+         }
+         else
+            console.error(err);
+      });
+   }
+
    function single_timestep()
    {
       contract_inst.methods.timestep().send({from: web3.eth.defaultAccount},(err, res) => 
@@ -437,6 +477,38 @@
          }
          else
             console.error(err);
+      });
+   }
+
+
+   function get_lenderBalance()
+   {
+      contract_inst.methods.lenderBalance().call((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("lenderBalance_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
+      });
+   }
+
+
+   function get_renterBalance()
+   {
+      contract_inst.methods.renterBalance().call((err, res) => 
+      {
+         if(!err)
+         {
+            document.getElementById("renterBalance_out").innerText = res;
+            console.log(res);
+         }
+         else
+            console.error(err);
+
       });
    }
 

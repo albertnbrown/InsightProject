@@ -1,4 +1,5 @@
 pragma solidity >=0.4.22 <0.7.0;
+//pragma experimental SMTChecker;
 
 contract LoanContractDemo {
     address payable public lender;
@@ -15,8 +16,8 @@ contract LoanContractDemo {
     uint public deadline;
     uint public graceDeadline;
 
-    uint lenderBalance;
-    uint renterBalance;
+    uint public lenderBalance;
+    uint public renterBalance;
 
     enum State { Created, Collaterized, Transferring, Loaned, ReturnScheduled, Returned, Refund, Inactive, Late } //late is unused, refunded is kinda used but maybe it shouldn't be
     //enum //standing { Friendly, Unconfirmed, Dispute, Unresponsive } //still not sure what I want this for, but it does kinda leave metadata for postmortum
@@ -93,7 +94,7 @@ contract LoanContractDemo {
             "You missed the Dispute period."
         );
         require (
-            fakenow > graceDeadline,
+            fakenow >= graceDeadline,
             "Wait until the grace period ends."
         );
         _; 
@@ -101,7 +102,7 @@ contract LoanContractDemo {
 
     modifier afterDisputePeriod() { 
         require (
-            fakenow - graceTime > graceDeadline,
+            fakenow - graceTime >= graceDeadline,
             "Wait for the dispute period to end."
         );
         _; 
@@ -155,13 +156,13 @@ contract LoanContractDemo {
         rentPeriod = 20;
         deadline = 40;
         graceTime = 2;
+        graceDeadline = 0;
 
         lenderBalance = 0;
         renterBalance = 0;
 
         emit Created();
     }
-
 
     function timestep()
         public
@@ -173,6 +174,21 @@ contract LoanContractDemo {
         public
     {
         fakenow += _steps;
+    }
+
+    function demoAdimnReset()
+        public
+    {
+        state = State.Created;
+        fakenow = 0;
+        rentPeriod = 20;
+        deadline = 40;
+        graceDeadline = 0;
+        
+        lenderBalance = 0;
+        renterBalance = 0;
+
+        emit Created();
     }
 
     function demoFund()
