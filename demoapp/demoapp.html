@@ -43,66 +43,51 @@
    <button onclick="single_timestep()">one step</button>
    <span id="timestep_button"></span>
    <br>
+   <button onclick="large_timestep()">large step</button>
    <label for="largeTimestep_input">timesteps:</label>
    <input id="largeTimestep_input">
-   <button onclick="large_timestep()">large step</button>
    <span id="largeTimestep_button"></span>
    
 
    <p>Look at the internal public variables:</p>
+   <button onclick="get_all()">Refresh</button>
    <br>
-   <button onclick="get_lenderBalance()">Check lenderBalance</button>
-   <span id="lenderBalance_out"></span>
+   <span>lenderBalance (eth): </span><span id="lenderBalance_out"></span>
    <br>
-   <button onclick="get_renterBalance()">Check renterBalance</button>
-   <span id="renterBalance_out"></span>
+   <span>renterBalance (eth): </span><span id="renterBalance_out"></span>
    <br>
-   <button onclick="get_state()">Check state</button>
-   <span id="state_out"></span>
+   <span>state: </span><span id="state_out"></span>
+   <!-- UNCOMMENT FOR EXTRA DIAGNOSTIC INFO -->
+   <!--<br>
+   <span>fakenow: </span><span id="fakenow_out"></span>
    <br>
-   <button onclick="get_fakenow()">Check fakenow</button>
-   <span id="fakenow_out"></span>
+   <span>graceDeadline: </span><span id="graceDeadline_out"></span>
    <br>
-   <button onclick="get_graceDeadline()">Check graceDeadline</button>
-   <span id="graceDeadline_out"></span>
+   <span>deadline: </span><span id="deadline_out"></span>
    <br>
-   <button onclick="get_deadline()">Check deadline</button>
-   <span id="deadline_out"></span>
+   <span>rentPeriod: </span><span id="rentPeriod_out"></span>
    <br>
-   <button onclick="get_rentPeriod()">Check rentPeriod</button>
-   <span id="rentPeriod_out"></span>
+   <span>graceTime: </span><span id="graceTime_out"></span>
    <br>
-   <button onclick="get_graceTime()">Check graceTime</button>
-   <span id="graceTime_out"></span>
+   <span>lender address: </span><span id="lender_out"></span>
    <br>
-   <button onclick="get_lender()">Check lender</button>
-   <span id="lender_out"></span>
+   <span>renter address: </span><span id="renter_out"></span>
    <br>
-   <button onclick="get_renter()">Check renter</button>
-   <span id="renter_out"></span>
+   <span>paymentAmount (wei): </span><span id="paymentAmount_out"></span>
    <br>
-   <button onclick="get_paymentAmount()">Check paymentAmount</button>
-   <span id="paymentAmount_out"></span>
+   <span>paymentStored (wei): </span><span id="paymentStored_out"></span>
    <br>
-   <button onclick="get_paymentStored()">Check paymentStored</button>
-   <span id="paymentStored_out"></span>
+   <span>lenderCollateral (wei): </span><span id="lenderCollateral_out"></span>
    <br>
-   <button onclick="get_lenderCollateral()">Check lenderCollateral</button>
-   <span id="lenderCollateral_out"></span>
-   <br>
-   <button onclick="get_renterCollateral()">Check renterCollateral</button>
-   <span id="renterCollateral_out"></span>
+   <span>renterCollateral (wei): </span><span id="renterCollateral_out"></span> -->
 
 
 
-<!--<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.2.4/dist/web3.min.js"></script>-->
+
 <script src="./web3-browserify.js"></script>
 <script>
-   //var web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
    const web3 = new Web3(window.web3.currentProvider);
-   //var web3 = new Web3(ethereum);
 
-   //web3.currentProvider.enable();
    ethereum.enable();
 
    web3.eth.getAccounts((error, accounts) => {
@@ -116,7 +101,7 @@
 
    const contract_abi = [{"inputs":[],"payable":true,"stateMutability":"payable","type":"constructor"},{"anonymous":false,"inputs":[],"name":"Aborted","type":"event"},{"anonymous":false,"inputs":[],"name":"ContractFunded","type":"event"},{"anonymous":false,"inputs":[],"name":"Created","type":"event"},{"anonymous":false,"inputs":[],"name":"FinishedSuccessfully","type":"event"},{"anonymous":false,"inputs":[],"name":"InvitationToTrade","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemLoaned","type":"event"},{"anonymous":false,"inputs":[],"name":"ItemReturned","type":"event"},{"anonymous":false,"inputs":[],"name":"LastChanceAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LateAborted","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderDisputed","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"LenderWithdrew","type":"event"},{"anonymous":false,"inputs":[],"name":"PurchaseForced","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterInactivity","type":"event"},{"anonymous":false,"inputs":[],"name":"RenterWithdrew","type":"event"},{"anonymous":false,"inputs":[],"name":"ReturnScheduled","type":"event"},{"constant":true,"inputs":[],"name":"deadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"fakenow","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceDeadline","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"graceTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lender","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lenderBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lenderCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"paymentStored","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"rentPeriod","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renter","outputs":[{"internalType":"address payable","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renterBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"renterCollateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"state","outputs":[{"internalType":"enum LoanContractDemo.State","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"timestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint8","name":"_steps","type":"uint8"}],"name":"largeTimestep","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"demoAdimnReset","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"demoFund","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"fundAsRenter","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"Giving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Recieved","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"ScheduleReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"ConfirmReturned","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Finalize","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawLender","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawRenter","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortNoInterest","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortLastChance","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameRenterRecieve","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameCannotGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortCouldntGive","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutGiving","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutForcePurchace","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"blameFalseReturn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"abortTimeoutReturnScheduling","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
 
-   const contract_address = "0xF2B8E85194782F0056db57F908a939A92fc802E7";
+   const contract_address = "0xA8420c3BB01CcDE8A6f3479754C533332BFA1804";
 
    var contract_inst = new web3.eth.Contract(contract_abi, contract_address);
 
@@ -480,6 +465,23 @@
       });
    }
 
+   function get_all()
+   {
+      get_lenderBalance()
+      get_renterBalance()
+      get_deadline()
+      get_fakenow()
+      get_graceDeadline()
+      get_graceTime()
+      get_lender()
+      get_lenderCollateral()
+      get_paymentAmount()
+      get_paymentStored()
+      get_rentPeriod()
+      get_renter()
+      get_renterCollateral()
+      get_state()
+   }
 
    function get_lenderBalance()
    {
@@ -487,7 +489,7 @@
       {
          if(!err)
          {
-            document.getElementById("lenderBalance_out").innerText = res;
+            document.getElementById("lenderBalance_out").innerText = res/1000000000000000000;
             console.log(res);
          }
          else
@@ -503,7 +505,7 @@
       {
          if(!err)
          {
-            document.getElementById("renterBalance_out").innerText = res;
+            document.getElementById("renterBalance_out").innerText = res/1000000000000000000;
             console.log(res);
          }
          else
