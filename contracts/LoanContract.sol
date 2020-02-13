@@ -350,6 +350,7 @@ contract LoanContract {
     /// Can be used maliciously but only to take same money from both.
     /// This is the lender's safeguard to renter cheating by refusing the item, and should not be used if the item was actually given.
     /// This is here currently as a seperate option for the Lender to give them an alternative to blameRenterRecieve in the case of external desire for maliciousness
+    /// This could be replaced by reputation system and isn't useful in any strategy
     function blameCannotGive()
     	public
     	onlyLender
@@ -365,6 +366,9 @@ contract LoanContract {
     /// If the Lender is truly unresponsive, the Renter has a failsafe with a full refund for them.
     /// This acts as a suggested ending for the Lender if they have a not-so-bad experience with the Renter but cannot trade.
     /// Either person is able to call this to allow for things to end.
+    /// This function is actually one of the main "economic security risks"
+    /// However it might be a reasonable request from users to have this
+    /// It really opens things to coersion and this function should be depreciated
     function abortCouldntGive()
     	public
     	onlyMemeber
@@ -379,6 +383,7 @@ contract LoanContract {
 
     /// If the Lender is truly unresponsive, the Renter has a failsafe with a full refund for them
     /// and a partial slashing of the Lender
+    /// This would be the fallback for removing abortCounldntGive but might need to incorporate a larger penalty
     function abortTimeoutGiving()
     	public
     	onlyRenter
